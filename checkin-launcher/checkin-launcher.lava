@@ -8,10 +8,14 @@
 {%- assign launcherDefinedTypeId = 0 -%}                    //- Id of your launcher Defined Type
 {%- assign defaultConfigId = 0 -%}                          //- Check-in configuration used when a button doesn't set one
 {%- assign pageHeading = 'Select Check-In Type:' -%}
-{%- assign pageBackgroundColor = '' -%}                     //- e.g. '#1e1b18'. Blank = the theme's background
-{%- assign headingColor = '' -%}                            //- Blank = the theme's text color
-{%- assign buttonColor = '' -%}                             //- e.g. '#2e6e73'. Blank = the theme's primary button color
-{%- assign buttonTextColor = '' -%}                         //- Blank = the theme's button text color
+//- Colors for this launcher page only. Blank = use the page's site theme (the Theme set on this page's
+//- site under Admin Tools > Settings > CMS > Sites). Not related to the per-button check-in Theme.
+{%- assign pageBackgroundColor = '' -%}                     //- e.g. '#1e1b18'. Blank = site theme's background
+{%- assign headingColor = '' -%}                            //- Blank = site theme's heading color
+{%- assign buttonColor = '' -%}                             //- e.g. '#2e6e73'. Blank = site theme's primary button color
+{%- assign buttonTextColor = '' -%}                         //- Blank = site theme's primary button text color
+{%- assign revealTaps = 5 -%}                               //- Quick taps in the invisible top-right corner to show each button's areas
+{%- assign revealSeconds = 30 -%}                           //- Areas hide again automatically after this many seconds
 //- ===== END SETTINGS =====
 
 //- Optional: per-iPad launcher URL like /nextgen-checkin/start?KioskId=12
@@ -19,6 +23,13 @@
 
 {%- assign definedType = launcherDefinedTypeId | FromCache:'DefinedType' -%}
 {%- assign options = definedType.DefinedValues | Where:'IsActive',true -%}
+
+//- Only values with Check-in Areas become buttons. If none have them, launcherDefinedTypeId probably points at the wrong Defined Type.
+{%- assign buttonCount = 0 -%}
+{%- for option in options -%}
+    {%- assign areaCheck = option | Attribute:'CheckInAreas','RawValue' -%}
+    {%- if areaCheck != empty and areaCheck != '' -%}{%- assign buttonCount = buttonCount | Plus:1 -%}{%- endif -%}
+{%- endfor -%}
 
 <style>
     {%- if pageBackgroundColor != '' %}
@@ -66,6 +77,25 @@
         color: {{ buttonTextColor }};
         {%- endif %}
     }
+    .launcher-areas {
+        display: none;
+        margin-top: 0.5em;
+        font-size: 0.5em;
+        font-style: italic;
+        font-weight: lighter;
+        text-wrap: balance;
+    }
+    .launcher.show-areas .launcher-areas {
+        display: block;
+    }
+    .launcher-hotspot {
+        position: fixed;
+        right: 0;
+        top: 0;
+        width: 80px;
+        height: 80px;
+        z-index: 10;
+    }
 </style>
 
 <h2 class="launcher-heading text-uppercase font-weight-bolder ml-5">{{ pageHeading }}</h2>
@@ -74,6 +104,8 @@
     <div class="alert alert-warning m-5">Launcher not configured: no Defined Type found with Id {{ launcherDefinedTypeId }}. Set launcherDefinedTypeId in the settings block.</div>
 {%- elseif options == empty -%}
     <div class="alert alert-warning m-5">The "{{ definedType.Name }}" Defined Type has no active values. Add at least one to create a button.</div>
+{%- elseif buttonCount == 0 -%}
+    <div class="alert alert-warning m-5">The "{{ definedType.Name }}" Defined Type doesn't look like a launcher: none of its values have Check-in Areas. Check launcherDefinedTypeId.</div>
 {%- endif -%}
 <div class="launcher">
     <div class="launcher-buttons">
@@ -81,9 +113,10 @@
             {%- assign configId = option | Attribute:'CheckinConfigId','RawValue' -%}
             {%- if configId == empty or configId == '' -%}{%- assign configId = defaultConfigId -%}{%- endif -%}
 
-            {%- assign theme = option | Attribute:'Theme','RawValue' -%}  //- Optional per-button theme. Blank = check-in's default
+            {%- assign theme = option | Attribute:'Theme','RawValue' -%}  //- Optional per-button check-in theme (styles the check-in screens, not this page). Blank = check-in's default
 
             {%- assign areaIds = option | Attribute:'CheckInAreas','RawValue' -%}
+            {%- if areaIds == empty or areaIds == '' -%}{%- continue -%}{%- endif -%}
 
             {%- capture url -%}
                 /nextgen-checkin/setup?CheckinConfigId={{ configId }}&GroupTypeIds={{ areaIds | UrlEncode }}
@@ -91,7 +124,41 @@
                 {%- if theme != '' -%}&Theme={{ theme | UrlEncode }}{%- endif -%}
             {%- endcapture -%}
 
-            <a class="btn btn-primary launcher-button" href="{{ url | Trim }}">{{ option.Value }}</a>
+            <a class="btn btn-primary launcher-button" href="{{ url | Trim }}">
+                {{ option.Value }}
+                <div class="launcher-areas">{{ option | Attribute:'CheckInAreas' }}</div>
+            </a>
         {%- endfor -%}
     </div>
 </div>
+
+//- Hidden area reveal: tap the invisible top-right corner quickly to show each button's areas.
+<div class="launcher-hotspot" id="launcher-hotspot" aria-hidden="true"></div>
+<script>
+    (function () {
+        const hotspot = document.getElementById('launcher-hotspot');
+        const launcher = document.querySelector('.launcher');
+        if (!hotspot || !launcher) return;
+
+        const tapsNeeded = {{ revealTaps }};
+        const hideAfterMs = {{ revealSeconds }} * 1000;
+        let taps = 0;
+        let tapTimer = null;
+        let hideTimer = null;
+
+        hotspot.addEventListener('click', function () {
+            taps++;
+            clearTimeout(tapTimer);
+            tapTimer = setTimeout(function () { taps = 0; }, 2000);
+
+            if (taps < tapsNeeded) return;
+            taps = 0;
+
+            const showing = launcher.classList.toggle('show-areas');
+            clearTimeout(hideTimer);
+            if (showing) {
+                hideTimer = setTimeout(function () { launcher.classList.remove('show-areas'); }, hideAfterMs);
+            }
+        });
+    })();
+</script>

@@ -100,7 +100,8 @@ Add one Defined Value per button. The **Value** is the button's label. Check the
 | `launcherDefinedTypeId` | The Defined Type Id from step 1 |
 | `defaultConfigId` | Id of the configuration used when a button doesn't set one |
 | `pageHeading` | Text above the buttons |
-| `pageBackgroundColor`, `headingColor`, `buttonColor`, `buttonTextColor` | Optional. Blank uses the theme's colors |
+| `revealTaps`, `revealSeconds` | Quick taps in the invisible top-right corner that show each button's areas (default 5), and how long they stay visible (default 30 seconds) |
+| `pageBackgroundColor`, `headingColor`, `buttonColor`, `buttonTextColor` | Optional colors for the launcher page. Blank uses the theme of the site the page belongs to (Admin Tools > Settings > CMS > Sites). This is separate from the per-button check-in Theme, which styles the check-in screens after a button is tapped |
 
 If the page shows a yellow warning instead of buttons, the Defined Type Id is wrong or the Defined Type has no active values.
 

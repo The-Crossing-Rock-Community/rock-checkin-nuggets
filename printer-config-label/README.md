@@ -40,7 +40,7 @@ Keep in mind that a ZPL label's contents are visible to anyone who can edit chec
 
 ## Printing it from Rock (Nextgen)
 
-1. **Admin Tools > Settings > Check-in > Check-in Labels**: add a new label.
+1. Open Rock's Nextgen check-in **Labels** page and add a new label. (Its location in the admin menus depends on your Rock version.)
 2. Set **Label Format** to **ZPL**. Any label type works.
 3. Paste in `printer-config.zpl`, adjusting the settings above first. Save.
 4. Don't attach this label to any check-in area or group, so it never prints during check-in.

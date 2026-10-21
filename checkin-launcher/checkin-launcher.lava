@@ -1,0 +1,97 @@
+/-
+    Rock Check-in Launcher (Nextgen check-in)
+    One tap opens check-in fully configured. Each active value in the launcher
+    Defined Type becomes a button. See README.md for setup.
+-/
+
+//- ===== SETTINGS: change these for your Rock =====
+{%- assign launcherDefinedTypeId = 0 -%}                    //- Id of your launcher Defined Type
+{%- assign defaultConfigId = 0 -%}                          //- Check-in configuration used when a button doesn't set one
+{%- assign pageHeading = 'Select Check-In Type:' -%}
+{%- assign pageBackgroundColor = '' -%}                     //- e.g. '#1e1b18'. Blank = the theme's background
+{%- assign headingColor = '' -%}                            //- Blank = the theme's text color
+{%- assign buttonColor = '' -%}                             //- e.g. '#2e6e73'. Blank = the theme's primary button color
+{%- assign buttonTextColor = '' -%}                         //- Blank = the theme's button text color
+//- ===== END SETTINGS =====
+
+//- Optional: per-iPad launcher URL like /nextgen-checkin/start?KioskId=12
+{%- assign kioskId = 'Global' | PageParameter:'KioskId' | AsInteger -%}
+
+{%- assign definedType = launcherDefinedTypeId | FromCache:'DefinedType' -%}
+{%- assign options = definedType.DefinedValues | Where:'IsActive',true -%}
+
+<style>
+    {%- if pageBackgroundColor != '' %}
+    body { background-color: {{ pageBackgroundColor }}; }
+    {%- endif %}
+    .launcher-heading {
+        margin: 20px 0 10px 0;
+        {%- if headingColor != '' %} color: {{ headingColor }};{% endif %}
+    }
+    .launcher {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        width: 100vw;
+        margin: 0;
+        padding: 30px 10px 10px 10px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+        align-items: center;
+    }
+    .launcher-buttons {
+        width: 100%;
+        height: 90%;
+        margin: auto;
+        display: grid;
+        padding: 4% 3%;
+        gap: 8% 2%;
+        grid-template-columns: 48% 48%;
+        justify-content: space-evenly;
+    }
+    .launcher-button {
+        min-height: 120px;
+        max-height: 40vh;
+        text-align: center;
+        font-size: 1.4em;
+        border-radius: 10px;
+        align-content: center;
+        {%- if buttonColor != '' %}
+        background-color: {{ buttonColor }};
+        border-color: {{ buttonColor }};
+        {%- endif %}
+        {%- if buttonTextColor != '' %}
+        color: {{ buttonTextColor }};
+        {%- endif %}
+    }
+</style>
+
+<h2 class="launcher-heading text-uppercase font-weight-bolder ml-5">{{ pageHeading }}</h2>
+
+{%- if definedType == null -%}
+    <div class="alert alert-warning m-5">Launcher not configured: no Defined Type found with Id {{ launcherDefinedTypeId }}. Set launcherDefinedTypeId in the settings block.</div>
+{%- elseif options == empty -%}
+    <div class="alert alert-warning m-5">The "{{ definedType.Name }}" Defined Type has no active values. Add at least one to create a button.</div>
+{%- endif -%}
+<div class="launcher">
+    <div class="launcher-buttons">
+        {%- for option in options -%}
+            {%- assign configId = option | Attribute:'CheckinConfigId','RawValue' -%}
+            {%- if configId == empty or configId == '' -%}{%- assign configId = defaultConfigId -%}{%- endif -%}
+
+            {%- assign theme = option | Attribute:'Theme','RawValue' -%}  //- Optional per-button theme. Blank = check-in's default
+
+            {%- assign areaIds = option | Attribute:'CheckInAreas','RawValue' -%}
+
+            {%- capture url -%}
+                /nextgen-checkin/setup?CheckinConfigId={{ configId }}&GroupTypeIds={{ areaIds | UrlEncode }}
+                {%- if kioskId and kioskId > 0 -%}&KioskId={{ kioskId }}{%- endif -%}
+                {%- if theme != '' -%}&Theme={{ theme | UrlEncode }}{%- endif -%}
+            {%- endcapture -%}
+
+            <a class="btn btn-primary launcher-button" href="{{ url | Trim }}">{{ option.Value }}</a>
+        {%- endfor -%}
+    </div>
+</div>

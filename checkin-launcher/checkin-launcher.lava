@@ -14,7 +14,7 @@
 {%- assign headingColor = '' -%}                            //- Blank = site theme's heading color
 {%- assign buttonColor = '' -%}                             //- e.g. '#2e6e73'. Blank = site theme's primary button color
 {%- assign buttonTextColor = '' -%}                         //- Blank = site theme's primary button text color
-{%- assign revealTaps = 5 -%}                               //- Quick taps in the invisible top-right corner to show each button's areas
+{%- assign revealTaps = 5 -%}                               //- Quick taps in the invisible top-right corner to show each button's areas and URL
 {%- assign revealSeconds = 30 -%}                           //- Areas hide again automatically after this many seconds
 //- ===== END SETTINGS =====
 
@@ -85,6 +85,13 @@
         font-weight: lighter;
         text-wrap: balance;
     }
+    .launcher-url {
+        margin-top: 0.5em;
+        font-family: monospace;
+        font-style: normal;
+        word-break: break-all;
+        text-wrap: wrap;
+    }
     .launcher.show-areas .launcher-areas {
         display: block;
     }
@@ -119,20 +126,24 @@
             {%- if areaIds == empty or areaIds == '' -%}{%- continue -%}{%- endif -%}
 
             {%- capture url -%}
-                /nextgen-checkin/setup?CheckinConfigId={{ configId }}&GroupTypeIds={{ areaIds | UrlEncode }}
+                /nextgen-checkin/setup?CheckinConfigId={{ configId }}&GroupTypeIds={{ areaIds }}
                 {%- if kioskId and kioskId > 0 -%}&KioskId={{ kioskId }}{%- endif -%}
                 {%- if theme != '' -%}&Theme={{ theme | UrlEncode }}{%- endif -%}
             {%- endcapture -%}
+            {%- assign url = url | Trim -%}
 
-            <a class="btn btn-primary launcher-button" href="{{ url | Trim }}">
+            <a class="btn btn-primary launcher-button" href="{{ url }}">
                 {{ option.Value }}
-                <div class="launcher-areas">{{ option | Attribute:'CheckInAreas' }}</div>
+                <div class="launcher-areas">
+                    {{ option | Attribute:'CheckInAreas' }}
+                    <div class="launcher-url">{{ url }}</div>
+                </div>
             </a>
         {%- endfor -%}
     </div>
 </div>
 
-//- Hidden area reveal: tap the invisible top-right corner quickly to show each button's areas.
+//- Hidden area reveal: tap the invisible top-right corner quickly to show each button's areas and URL.
 <div class="launcher-hotspot" id="launcher-hotspot" aria-hidden="true"></div>
 <script>
     (function () {

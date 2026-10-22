@@ -100,7 +100,7 @@ Add one Defined Value per button. The **Value** is the button's label. Check the
 | `launcherDefinedTypeId` | The Defined Type Id from step 1 |
 | `defaultConfigId` | Id of the configuration used when a button doesn't set one |
 | `pageHeading` | Text above the buttons |
-| `revealTaps`, `revealSeconds` | Quick taps in the invisible top-right corner that show each button's areas (default 5), and how long they stay visible (default 30 seconds) |
+| `revealTaps`, `revealSeconds` | Quick taps in the invisible top-right corner that show each button's areas and URL (default 5), and how long they stay visible (default 30 seconds) |
 | `pageBackgroundColor`, `headingColor`, `buttonColor`, `buttonTextColor` | Optional colors for the launcher page. Blank uses the theme of the site the page belongs to (Admin Tools > Settings > CMS > Sites). This is separate from the per-button check-in Theme, which styles the check-in screens after a button is tapped |
 
 If the page shows a yellow warning instead of buttons, the Defined Type Id is wrong or the Defined Type has no active values.
@@ -127,5 +127,5 @@ Notes for IP matching:
 ## Troubleshooting
 
 - **Yellow warning instead of buttons:** check `launcherDefinedTypeId`, and that the Defined Type has active values.
-- **Check-in shows the setup screen:** the URL is missing something. Hover over a button to see its URL. You need `CheckinConfigId` and `GroupTypeIds`, and either `KioskId` or an IP/name match to a check-in kiosk Device.
+- **Check-in shows the setup screen:** the URL is missing something. To see each button's URL, quickly tap the invisible top-right corner of the launcher (5 taps by default); the URL appears under each button's areas. You need `CheckinConfigId` and `GroupTypeIds`, and either `KioskId` or an IP/name match to a check-in kiosk Device.
 - **"Kiosk Closed for Today":** check-in launched correctly, but no schedules are active for those areas right now.

@@ -8,7 +8,7 @@ A one-time ZPL label that configures a Zebra check-in printer. Print it once to 
 
 **Cutter jams.** Zebra's default backfeed setting (`~JSN`) leaves the next label parked on the rubber platen roller between prints. Overnight it takes a curl, and the first label of the morning jams in the cutter. Backfeed-before (`~JSB`) parks the label inside the cutter instead, where it can't curl.
 
-**Nextgen doesn't set it for you.** Classic check-in labels sent `~JSN` with every print. Nextgen designed labels send no backfeed command at all, so the printer uses whatever setting it already has. A brand-new printer defaults to `~JSN`.
+**Nextgen doesn't set it for you.** Rock's stock Classic labels include `~JSN`, so it went out with every print (the Classic fix was changing that one `N` to a `B`). Nextgen designed labels send no backfeed command at all, so the printer uses whatever setting it already has. A brand-new printer defaults to `~JSN`.
 
 **Settings don't stick without `^JUS`.** Any printer setting sent without `^JUS` lasts only until the next power cycle. `^JUS` saves the settings to the printer's memory. Don't put it in your everyday labels, though: saving on every print wears out the printer's memory, which is why Rock's Classic label editor strips it.
 
@@ -22,21 +22,16 @@ A one-time ZPL label that configures a Zebra check-in printer. Print it once to 
 | `^MTD` | Media type: direct thermal | You use ribbon (thermal transfer): `^MTT` |
 | `^PR6,6` | Print and feed speed, inches per second | Preference |
 | `~SD10` | Darkness, 0-30 | Prints are too light or too dark for your stock |
+| `^KP8888` | Front-panel passcode (optional, see below) | Always: `8888` is a placeholder |
 | `^JUS` | Save settings to memory | Never remove it |
 
 The `^FX` lines are ZPL comments; the printer ignores them. Don't put `^` or `~` inside a comment, because the printer reads those as the start of a new command.
 
 ### Optional: front-panel passcode
 
-For printers with a front panel (ZD500, ZD6xx, and others), add a line before `^JUS`:
+For printers with a front panel (ZD500, ZD6xx, and others), the `^KP` line locks the printer's menus behind a 4-digit code so nobody changes settings at the kiosk. The file ships with `^KP8888` as a placeholder: change `8888` to your own code. It has to stay before `^JUS`, or the passcode reverts to the default `1234` at the next power cycle.
 
-```
-^KP1234
-```
-
-using your own 4-digit code. Without `^JUS` after it, the passcode reverts to the default `1234` at the next power cycle.
-
-Keep in mind that a ZPL label's contents are visible to anyone who can edit check-in labels in Rock, and Nextgen's label preview sends the label to Labelary (api.labelary.com) to render it. Leave the passcode out if that matters to you.
+Keep in mind that a ZPL label's contents are visible to anyone who can edit check-in labels in Rock, and Nextgen's label preview sends the label to Labelary (api.labelary.com) to render it. If that matters to you, delete the `^KP` line and the comment above it.
 
 ## Printing it from Rock (Nextgen)
 

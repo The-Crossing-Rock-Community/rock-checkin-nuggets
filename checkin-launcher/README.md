@@ -27,7 +27,13 @@ Pass a complete set and check-in skips the setup screen. The launcher builds one
 
 **Admin Tools > Settings > General > Defined Types**, add a new one, for example "Check-in Launcher Options."
 
-Note its Id from the URL (`.../DefinedType/227` means the Id is `227`). In recent Rock versions you may need to open the three-dot menu and choose **Audit** to see the Id. You'll need it in step 3.
+Note its Id from the URL (`.../DefinedType/227` means the Id is `227`). In recent Rock versions you may need to open the three-dot menu and choose **Audit** to see the Id. Or run this in **Admin Tools > Power Tools > SQL Command**:
+
+```sql
+SELECT Id, Name FROM DefinedType WHERE Name = 'Check-in Launcher Options'
+```
+
+You'll need the Id in step 3.
 
 Add these attributes to the Defined Type:
 
@@ -97,13 +103,13 @@ Add one Defined Value per button. The **Value** is the button's label. Check the
 
 | Setting | What to enter |
 |---|---|
-| `launcherDefinedTypeId` | The Defined Type Id from step 1 |
-| `defaultConfigId` | Id of the configuration used when a button doesn't set one |
+| `launcherDefinedTypeId` | **Required.** The Defined Type Id from step 1 |
+| `defaultConfigId` | **Required** unless every button sets its own configuration. Id of the configuration used when a button doesn't set one. To find it, run the Check-in Configuration query from step 1 in **Admin Tools > Power Tools > SQL Command**; the `Value` column is the Id |
 | `pageHeading` | Text above the buttons |
 | `revealTaps`, `revealSeconds` | Quick taps in the invisible top-right corner that show each button's areas and URL (default 5), and how long they stay visible (default 30 seconds) |
 | `pageBackgroundColor`, `headingColor`, `buttonColor`, `buttonTextColor` | Optional colors for the launcher page. Blank uses the theme of the site the page belongs to (Admin Tools > Settings > CMS > Sites). This is separate from the per-button check-in Theme, which styles the check-in screens after a button is tapped |
 
-If the page shows a yellow warning instead of buttons, the Defined Type Id is wrong or the Defined Type has no active values.
+If the page shows a yellow warning instead of buttons, the Defined Type Id is wrong, the Defined Type has no active values, or none of its values have Check-in Areas checked. The warning says which.
 
 ### 4. Point your kiosks at the launcher
 
@@ -111,7 +117,9 @@ Set each kiosk's check-in URL (in the Rock check-in app, or the browser's start 
 
 ## Identifying the kiosk: two patterns
 
-**One Device per campus** (most common, especially with client printing)
+A Device here means a record on Rock's **Devices** page (in Admin Tools > Settings, with the check-in settings) whose Device Type is Check-in Kiosk. Its Id is the `KioskId`.
+
+**One Device per campus** (common with client printing)
 Use the plain launcher URL. Without a `KioskId`, Rock finds the kiosk's Device record by IP address: it matches the IP it sees against each check-in kiosk Device's **IP Address / Hostname** field. The check-in setup block can also match by name if **Enable Kiosk Match By Name** is turned on: Rock does a reverse DNS lookup on the IP and matches the hostname against the Device's hostname field or its name.
 
 If Rock is hosted in the cloud, it sees each campus's public IP, so one Device per campus with that public IP works well.
@@ -122,10 +130,10 @@ Give each kiosk its own launcher URL with its Device Id: `.../nextgen-checkin/st
 Notes for IP matching:
 - Rock has to see the right IP. Check for NAT, proxies, or a CDN between the kiosks and Rock.
 - Use DHCP reservations so kiosk IPs don't change.
-- Name matching needs a reverse DNS (PTR) record. iPads usually don't register one.
+- Name matching needs a reverse DNS (PTR) record. iPads usually don't register one, and cloud-hosted Rock usually can't resolve your internal names anyway.
 
 ## Troubleshooting
 
-- **Yellow warning instead of buttons:** check `launcherDefinedTypeId`, and that the Defined Type has active values.
+- **Yellow warning instead of buttons:** check `launcherDefinedTypeId`, and that the Defined Type has active values with Check-in Areas checked.
 - **Check-in shows the setup screen:** the URL is missing something. To see each button's URL, quickly tap the invisible top-right corner of the launcher (5 taps by default); the URL appears under each button's areas. You need `CheckinConfigId` and `GroupTypeIds`, and either `KioskId` or an IP/name match to a check-in kiosk Device.
 - **"Kiosk Closed for Today":** check-in launched correctly, but no schedules are active for those areas right now.

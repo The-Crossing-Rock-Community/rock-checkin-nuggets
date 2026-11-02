@@ -122,6 +122,8 @@ A Device here means a record on Rock's **Devices** page (in Admin Tools > Settin
 **One Device per campus** (common with client printing)
 Use the plain launcher URL. Without a `KioskId`, Rock finds the kiosk's Device record by IP address: it matches the IP it sees against each check-in kiosk Device's **IP Address / Hostname** field. The check-in setup block can also match by name if **Enable Kiosk Match By Name** is turned on: Rock does a reverse DNS lookup on the IP and matches the hostname against the Device's hostname field or its name.
 
+> **Name matching is probably not an option unless you host Rock on your own network.** Cloud-hosted Rock sees each campus's public IP, not the kiosk's, and it can't look up your internal DNS, so it won't resolve a kiosk to its hostname.
+
 If Rock is hosted in the cloud, it sees each campus's public IP, so one Device per campus with that public IP works well.
 
 **One Device per physical kiosk** (server printing, or kiosks that need different locations)
@@ -130,7 +132,7 @@ Give each kiosk its own launcher URL with its Device Id: `.../nextgen-checkin/st
 Notes for IP matching:
 - Rock has to see the right IP. Check for NAT, proxies, or a CDN between the kiosks and Rock.
 - Use DHCP reservations so kiosk IPs don't change.
-- Name matching needs a reverse DNS (PTR) record. iPads usually don't register one, and cloud-hosted Rock usually can't resolve your internal names anyway.
+- Name matching needs a reverse DNS (PTR) record. iPads usually don't register one.
 
 ## Troubleshooting
 

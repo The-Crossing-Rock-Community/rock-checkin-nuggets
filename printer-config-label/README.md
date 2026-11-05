@@ -36,7 +36,7 @@ Keep in mind that a ZPL label's contents are visible to anyone who can edit chec
 ## Printing it from Rock (Nextgen)
 
 1. Open Rock's Nextgen check-in **Labels** page and add a new label. (Its location in the admin menus depends on your Rock version.)
-2. Set **Label Format** to **ZPL**. Any label type works.
+2. Set **Label Format** to **ZPL**. Any label type works for Preview printing. Choose **Family** if you might print it through check-in instead (see below).
 3. Paste in `printer-config.zpl`, adjusting the settings above first. Save.
 4. Don't attach this label to any check-in area or group, so it never prints during check-in.
 5. Open the label's **Preview**, pick the printer, and click **Print**. Repeat for each printer.
@@ -44,6 +44,39 @@ Keep in mind that a ZPL label's contents are visible to anyone who can edit chec
 Keep the "Printer configured" line. Nextgen's preview renders the label through Labelary before it enables Print, and a label with nothing printable won't render. The printout also confirms the settings were applied.
 
 If the printer's Device record has **Has Cutter** set, Rock adds `^MMC` just before the final `^XZ` when it prints. That's harmless here.
+
+## If Print doesn't work (cloud-hosted Rock)
+
+The Rock server sends a Preview print, not the kiosk. So the server has to reach the printer's IP on port 9100, either directly or through Rock's Cloud Print proxy. Most cloud-hosted Rock servers can't reach printers on a campus network. If you're one of them and don't run Cloud Print, Print won't reach the printer. You'll see an error such as "Timed out waiting for labels to print." or "Unable to print label: ...". You have two other options.
+
+### Option A: print it through check-in
+
+This works with any hosting, because the label prints the same way your real check-in labels do.
+
+1. Make sure the label type is **Family**, so it prints once per check-in rather than once per person.
+2. Attach the label to a check-in area you can check into right now: an area with an active schedule, or a test area with an always-open schedule (otherwise you'll get "Kiosk Closed for Today").
+3. At each kiosk, check in a test family with one person. The config label prints along with that area's normal labels.
+4. **Remove the label from the area as soon as you're done.** If you leave it attached, every check-in reconfigures the printer and runs `^JUS`, which is exactly the memory wear described above.
+
+Repeat at each kiosk that has its own printer.
+
+### Option B: send it from a PC with PowerShell
+
+Any Windows PC that can reach the printer's IP (same network, or a firewall rule allowing TCP 9100) can send the file directly. You don't need a driver or Zebra's utilities. Change the IP and file path, then run:
+
+```powershell
+$printer = '10.1.2.3'
+$file    = 'C:\path\to\printer-config.zpl'
+
+$client = New-Object System.Net.Sockets.TcpClient($printer, 9100)
+$stream = $client.GetStream()
+$bytes  = [System.IO.File]::ReadAllBytes($file)
+$stream.Write($bytes, 0, $bytes.Length)
+$stream.Flush()
+$client.Close()
+```
+
+Change `$printer` and run it again for each printer. This is the fastest way to do a whole campus. The printer's IP is on its Device record in Rock, or on a printer configuration report (hold the feed button on most Zebras).
 
 ## Verifying it worked
 
